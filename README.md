@@ -248,16 +248,17 @@ Der Index entspricht damit dem **Relevanz-Rang**: Rang 1 = relevanteste Quelle.
 
 Die vollständige mathematische Formel für den Score einer Quelle `Q` mit `n` Keywords:
 
-```
-Score(Q) = Σ_{i=0}^{n-1}  count(keyword_i, Q) × (n - i)
-```
+$$
+Score(Q) = \sum_{i=0}^{n-1} count(keyword_i, Q) \times (n - i)
+$$
 
-| Symbol              | Bedeutung                                                      |
-|---------------------|----------------------------------------------------------------|
-| `n`                 | Gesamtanzahl der Keywords                                      |
-| `i`                 | 0-basierter Index des Keywords in der Keyword-Datei            |
-| `count(keyword, Q)` | Anzahl der exakten Vorkommen des Keywords in der PDF-Quelle `Q`|
-| `(n - i)`           | Gewicht des Keywords (höchstes für das erste Keyword)          |
+| Symbol | Bedeutung |
+|--------|-----------|
+| $Q$ | Die zu bewertende Quelle (PDF-Datei) |
+| $n$ | Gesamtanzahl der Keywords |
+| $i$ | 0-basierter Index des Keywords in der Keyword-Datei |
+| $count(keyword_i, Q)$ | Anzahl der exakten Treffer von $keyword_i$ in Quelle $Q$ |
+| $n - i$ | Gewicht des Keywords (höchstes Gewicht für $i = 0$) |
 
 ---
 
