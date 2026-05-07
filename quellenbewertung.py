@@ -229,8 +229,8 @@ if __name__ == "__main__":
 
     # ── Configure paths ────────────────────────────────────
     # Adjust these two paths to match your folder structure:
-    FOLDER_PATH  = Path("simple_sources")          # Folder containing PDF sources
-    KEYWORD_FILE = Path("simple_stichpunkte.txt")  # Text file with keywords
+    FOLDER_PATH  = Path("sources")          # Folder containing PDF sources
+    KEYWORD_FILE = Path("stichpunkte.txt")  # Text file with keywords
 
     print("=" * 60)
     print("  Source Relevance Scoring Algorithm")
