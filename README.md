@@ -87,7 +87,7 @@ Für den Test mit einfachen Testdaten den Ordner-Pfad im Skript auf `simple_sour
 
 Das folgende Diagramm zeigt den vollständigen Ablauf des Algorithmus inkl. aller Fehler- und Sonderpfade:
 
-![Flussdiagramm des Algorithmus](./source_analyzer.drawio.png)
+![Flussdiagramm des Algorithmus](./source_analyzer.drawio.jpg)
 
 **Erläuterung der wichtigsten Pfade:**
 - **Fehlerfall 1 – Stichpunkt-Datei fehlt/leer:** Programm bricht sofort ab.
@@ -442,15 +442,18 @@ Eine PDF auf Chinesisch enthält keine englischen Keywords → alle Treffer = 0,
 
 ## Annahmen & Einschränkungen
 
-| ID  | Typ           | Beschreibung                                                             |
-|-----|---------------|--------------------------------------------------------------------------|
-| A1  | Annahme       | Quellen sind auf Englisch verfasst                                       |
-| A2  | Annahme       | PDFs sind text-basiert (nicht gescannt / bild-basiert)                   |
-| L1  | Einschränkung | Keine Unterscheidung zwischen Groß-/Kleinschreibung (case-insensitive)   |
-| L2  | Einschränkung | Kein Stemming/Lemmatisierung – `"learning"` ≠ `"learn"`                 |
-| L3  | Einschränkung | Bild-basierte PDFs liefern leeren Text → Score = 0                       |
-| L4  | Einschränkung | Keyword-Reihenfolge bestimmt vollständig die Gewichtung                  |
-| L5  | Einschränkung | Häufigkeit ≠ Relevanz – der Kontext der Erwähnung wird nicht bewertet    |
+| ID  | Typ           | Beschreibung                                                                                                                                                   |
+|-----|---------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| A1  | Annahme       | Quellen sind auf Englisch verfasst                                                                                                                             |
+| A2  | Annahme       | PDFs sind text-basiert (nicht gescannt / bild-basiert)                                                                                                         |
+| A3  | Annahme       | PDFs sind einspaltig aufgebaut – mehrspaltige Layouts werden nicht unterstützt                                                                                 |
+| L1  | Einschränkung | Keine Unterscheidung zwischen Groß-/Kleinschreibung (case-insensitive)                                                                                         |
+| L2  | Einschränkung | Kein Stemming/Lemmatisierung – `"learning"` ≠ `"learn"`                                                                                                        |
+| L3  | Einschränkung | Bild-basierte PDFs liefern leeren Text → Score = 0                                                                                                             |
+| L4  | Einschränkung | Keyword-Reihenfolge bestimmt vollständig die Gewichtung                                                                                                        |
+| L5  | Einschränkung | Häufigkeit ≠ Relevanz – der Kontext der Erwähnung wird nicht bewertet                                                                                          |
+| L6  | Einschränkung | Mehrspaltige PDFs: `pypdf` extrahiert Text zeilenweise ohne Spaltenlogik – bei zweispaltigen Layouts können Wörter aus verschiedenen Spalten vermischt werden, was zu fehlerhaften Treffern oder verpassten Keywords führen kann |
+| L7  | Einschränkung | Kopf- und Fußzeilen werden nicht herausgefiltert – Keywords die dort vorkommen (z. B. Titel, Seitenzahlen, Zeitschriftenname) werden mitgezählt und erhöhen den Score künstlich |
 
 ---
 
@@ -473,7 +476,7 @@ Das Skript erzeugt drei Ausgaben:
 │ 3 │ 2108.00941v3.pdf   │             10 │            33 │               43 │             4 │      0 │            0 │   409 │
 │ 4 │ 2308.11254v1.pdf   │              0 │            10 │               60 │             2 │      1 │            0 │   298 │
 │ 5 │ 2402.06196v3.pdf   │              5 │             9 │               16 │             8 │      8 │            0 │   179 │
-╰───┴────────────────────┴────────────────┴───────────────┴──────────────────┴───────────────┴────────┴──────────────┴───────╯
+╰───┴────────────────────┴───────────────┴──────────────────┴───────────────┴────────┴──────────────┴───────╯
 ```
 
 ---
