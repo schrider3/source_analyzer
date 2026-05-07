@@ -378,10 +378,10 @@ Testet ob der Silbentrennungs-Fix korrekt funktioniert. Wörter wie `neu-\nral n
 | Input | `test_C.pdf` + `simple_stichpunkte.txt` |
 | Erwartete Treffer | neural network: 0, DEEP LEARNINg: 0, deep learning: 0, Python: 1 |
 | Erwarteter Score | 1 |
-| Tatsächliche Treffer | _(hier eintragen)_ |
-| Tatsächlicher Score | _(hier eintragen)_ |
+| Tatsächliche Treffer | neural network: 0, DEEP LEARNINg: 0, deep learning: 0, Python: 1 |
+| Tatsächlicher Score | 1 |
 | Ergebnis | ✅Bestanden |
-| Abweichung | _(hier eintragen oder „keine")_ |
+| Abweichung | keine |
 
 ---
 
