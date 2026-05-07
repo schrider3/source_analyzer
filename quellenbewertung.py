@@ -4,16 +4,10 @@
   FOM Hackathon - Algorithms & Data Structures 2026
 =============================================================
 
-  Assumptions (documented, Phase 1):
-    [A1] Sources are written in English
-    [A2] PDFs are text-based (not scanned / image-based)
+  Vollständige Dokumentation (Annahmen, Einschränkungen,
+  Testfälle, Reflexion, Algorithmus-Erklärung):
+  → https://github.com/schrider3/source_analyzer#readme
 
-  Limitations (Phase 5):
-    [L1] No distinction between upper/lowercase (case-insensitive)
-    [L2] No stemming/lemmatization - "learning" ≠ "learn"
-    [L3] Image-based PDFs return empty text → Score = 0
-    [L4] Keyword order fully determines weighting
-    [L5] Frequency ≠ relevance (context is not evaluated)
 =============================================================
 
 run first: pip install pypdf pandas tabulate openpyxl
@@ -97,7 +91,7 @@ def load_pdfs(folder_path: Path) -> list[Path]:
 
 # ─────────────────────────────────────────────────────────────
 #  STEP 3 - Extract text from PDF
-#  Assumption [A2]: PDF is text-based
+#  Assumption [A2]: PDF is text-based (see README)
 # ─────────────────────────────────────────────────────────────
 
 def extract_text(pdf_path: Path) -> str:
@@ -134,7 +128,7 @@ def extract_text(pdf_path: Path) -> str:
 
 # ─────────────────────────────────────────────────────────────
 #  STEP 3b - Count exact occurrences of a keyword
-#  1:1 match, case-insensitive [A3]
+#  1:1 match, case-insensitive (see README → Limitation L1)
 # ─────────────────────────────────────────────────────────────
 
 def count_occurrences(keyword: str, text: str) -> int:
