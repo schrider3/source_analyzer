@@ -334,10 +334,10 @@ schreibtisch        → Gewicht 1
 | Input | `test_A.pdf` + `simple_stichpunkte.txt` |
 | Erwartete Treffer | neural network: 4, DEEP LEARNINg: 1, deep learning: 1, Python: 1 |
 | Erwarteter Score | 22 |
-| Tatsächliche Treffer | _(hier eintragen)_ |
-| Tatsächlicher Score | _(hier eintragen)_ |
-| Ergebnis | ⬜ Bestanden / ⬜ Fehlgeschlagen |
-| Abweichung | _(hier eintragen oder „keine")_ |
+| Tatsächliche Treffer | neural network: 4, DEEP LEARNINg: 1, deep learning: 1, Python: 1 |
+| Tatsächlicher Score | 22 |
+| Ergebnis | ⬜ Bestanden |
+| Abweichung | keine |
 
 #### Testfall N2 – Wenige Keywords vorhanden (`test_B.pdf`)
 
@@ -346,10 +346,10 @@ schreibtisch        → Gewicht 1
 | Input | `test_B.pdf` + `simple_stichpunkte.txt` |
 | Erwartete Treffer | neural network: 0, DEEP LEARNINg: 3, deep learning: 3, Python: 2 |
 | Erwarteter Score | 17 |
-| Tatsächliche Treffer | _(hier eintragen)_ |
-| Tatsächlicher Score | _(hier eintragen)_ |
-| Ergebnis | ⬜ Bestanden / ⬜ Fehlgeschlagen |
-| Abweichung | _(hier eintragen oder „keine")_ |
+| Tatsächliche Treffer | neural network: 0, DEEP LEARNINg: 3, deep learning: 3, Python: 2 |
+| Tatsächlicher Score | 17 |
+| Ergebnis | ✅Bestanden |
+| Abweichung | keine |
 
 ---
 
@@ -366,10 +366,10 @@ Testet ob der Silbentrennungs-Fix korrekt funktioniert. Wörter wie `neu-\nral n
 | Input | `test_hyphenation.pdf` + `simple_stichpunkte.txt` |
 | Erwartete Treffer | neural network: 2, DEEP LEARNINg: 2, deep learning: 2, Python: 1 |
 | Erwarteter Score | 19 |
-| Tatsächliche Treffer | _(hier eintragen)_ |
-| Tatsächlicher Score | _(hier eintragen)_ |
-| Ergebnis | ⬜ Bestanden / ⬜ Fehlgeschlagen |
-| Abweichung | _(hier eintragen oder „keine")_ |
+| Tatsächliche Treffer | neural network: 2, DEEP LEARNINg: 2, deep learning: 2, Python: 1 |
+| Tatsächlicher Score | 19 |
+| Ergebnis | ✅Bestanden |
+| Abweichung | keine |
 
 #### Testfall R2 – Nur 1 Keyword trifft (`test_C.pdf`)
 
@@ -380,7 +380,7 @@ Testet ob der Silbentrennungs-Fix korrekt funktioniert. Wörter wie `neu-\nral n
 | Erwarteter Score | 1 |
 | Tatsächliche Treffer | _(hier eintragen)_ |
 | Tatsächlicher Score | _(hier eintragen)_ |
-| Ergebnis | ⬜ Bestanden / ⬜ Fehlgeschlagen |
+| Ergebnis | ✅Bestanden |
 | Abweichung | _(hier eintragen oder „keine")_ |
 
 ---
@@ -396,11 +396,11 @@ Bild-PDFs enthalten keinen Text-Layer → `extract_text()` gibt leeren String zu
 | Feld | Wert |
 |------|------|
 | Input | `simple_sources/image_pdf.pdf` + `simple_stichpunkte.txt` |
-| Erwartetes Verhalten | Kein Absturz, Score = 0 |
-| Tatsächliches Verhalten | _(hier eintragen)_ |
-| Tatsächlicher Score | _(hier eintragen)_ |
-| Ergebnis | ⬜ Bestanden / ⬜ Fehlgeschlagen |
-| Abweichung | _(hier eintragen oder „keine")_ |
+| Erwartetes Verhalten | Kein Absturz, alle Treffer = 0, Score = 0 |
+| Tatsächliches Verhalten | Kein Absturz, alle Treffer = 0, Score = 0 |
+| Tatsächlicher Score | 0 |
+| Ergebnis | ✅ Bestanden |
+| Abweichung | keine |
 
 #### Testfall F2 – Fremdsprachige PDF (`chinese.pdf`)
 
@@ -410,10 +410,10 @@ Eine PDF auf Chinesisch enthält keine englischen Keywords → alle Treffer = 0,
 |------|------|
 | Input | `simple_sources/chinese.pdf` + `simple_stichpunkte.txt` |
 | Erwartetes Verhalten | Kein Absturz, alle Treffer = 0, Score = 0 |
-| Tatsächliches Verhalten | _(hier eintragen)_ |
-| Tatsächlicher Score | _(hier eintragen)_ |
-| Ergebnis | ⬜ Bestanden / ⬜ Fehlgeschlagen |
-| Abweichung | _(hier eintragen oder „keine")_ |
+| Tatsächliches Verhalten | Kein Absturz, alle Treffer = 0, Score = 0 |
+| Tatsächlicher Score | 0 |
+| Ergebnis | ✅ Bestanden |
+| Abweichung | keine |
 
 #### Testfall F3 – Leerer PDF-Ordner
 
@@ -421,9 +421,9 @@ Eine PDF auf Chinesisch enthält keine englischen Keywords → alle Treffer = 0,
 |------|------|
 | Input | Leerer Ordner (keine PDFs vorhanden) |
 | Erwartetes Verhalten | Fehlermeldung: „FEHLER: Kein PDF gefunden", Programm bricht ab |
-| Tatsächliches Verhalten | _(hier eintragen)_ |
-| Ergebnis | ⬜ Bestanden / ⬜ Fehlgeschlagen |
-| Abweichung | _(hier eintragen oder „keine")_ |
+| Tatsächliches Verhalten | Fehlermeldung: „FEHLER: Kein PDF gefunden" |
+| Ergebnis | ✅ Bestanden |
+| Abweichung | keine |
 
 ---
 
@@ -431,13 +431,13 @@ Eine PDF auf Chinesisch enthält keine englischen Keywords → alle Treffer = 0,
 
 | Testfall | Kategorie | Ergebnis |
 |----------|-----------|----------|
-| N1 – test_A.pdf | Normalfall | ⬜ |
-| N2 – test_B.pdf | Normalfall | ⬜ |
-| R1 – test_hyphenation.pdf | Randfall | ⬜ |
-| R2 – test_C.pdf | Randfall | ⬜ |
-| F1 – image_pdf.pdf | Fehlerfall | ⬜ |
-| F2 – chinese.pdf | Fehlerfall | ⬜ |
-| F3 – Leerer Ordner | Fehlerfall | ⬜ |
+| N1 – test_A.pdf | Normalfall | ✅ |
+| N2 – test_B.pdf | Normalfall | ✅ |
+| R1 – test_hyphenation.pdf | Randfall | ✅ |
+| R2 – test_C.pdf | Randfall | ✅ |
+| F1 – image_pdf.pdf | Fehlerfall | ✅ |
+| F2 – chinese.pdf | Fehlerfall | ✅ |
+| F3 – Leerer Ordner | Fehlerfall | ✅ |
 
 ---
 
