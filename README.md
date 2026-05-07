@@ -1,6 +1,6 @@
 # Source Relevance Scoring Algorithm
 
-> **FOM Hackathon – Algorithms & Data Structures 2026**
+> **FOM Hackathon – Algorithmen & Datenstrukturen 2026**
 
 Dieses Tool bewertet automatisch die Relevanz von PDF-Quellen anhand einer gewichteten Keyword-Analyse. Jede PDF-Datei erhält einen numerischen Score – je häufiger und wichtiger die gesuchten Begriffe im Dokument vorkommen, desto höher der Score. Die Quellen werden anschließend nach Relevanz absteigend sortiert und als Tabelle ausgegeben.
 
@@ -11,16 +11,12 @@ Dieses Tool bewertet automatisch die Relevanz von PDF-Quellen anhand einer gewic
 - [Voraussetzungen](#voraussetzungen)
 - [Projektstruktur](#projektstruktur)
 - [Schnellstart](#schnellstart)
+- [Flussdiagramm](#flussdiagramm)
 - [Algorithmus – Detaillierte Erklärung](#algorithmus--detaillierte-erklärung)
-  - [Schritt 1: Keywords laden](#schritt-1-keywords-laden)
-  - [Schritt 1b: Gewichte berechnen](#schritt-1b-gewichte-berechnen)
-  - [Schritt 2: PDF-Ordner laden](#schritt-2-pdf-ordner-laden)
-  - [Schritt 3: Text extrahieren](#schritt-3-text-extrahieren)
-  - [Schritt 3b: Keyword-Treffer zählen](#schritt-3b-keyword-treffer-zählen)
-  - [Schritt 4: Score berechnen](#schritt-4-score-berechnen)
-  - [Schritt 5: Tabelle bauen & sortieren](#schritt-5-tabelle-bauen--sortieren)
 - [Score-Formel](#score-formel)
+- [Abweichungsanalyse](#abweichungsanalyse)
 - [Beispiel](#beispiel)
+- [Testdokumentation](#testdokumentation)
 - [Annahmen & Einschränkungen](#annahmen--einschränkungen)
 - [Ausgabe](#ausgabe)
 
@@ -48,17 +44,24 @@ pip install pypdf pandas tabulate openpyxl
 ```
 source_analyzer/
 │
-├── quellenbewertung.py       # Hauptskript (der Algorithmus)
+├── quellenbewertung.py           # Hauptskript (der Algorithmus)
 │
-├── stichpunkte.txt           # Keyword-Datei (eine Zeile = ein Keyword)
-├── simple_stichpunkte.txt    # Vereinfachte Keyword-Beispieldatei
+├── stichpunkte.txt               # Keyword-Datei (eine Zeile = ein Keyword, wichtigstes zuerst)
+├── simple_stichpunkte.txt        # Vereinfachte Keyword-Datei für Tests
 │
-├── sources/                  # Ordner mit den zu analysierenden PDFs
-├── simple_sources/           # Ordner mit einfachen Beispiel-PDFs
+├── sources/                      # Ordner mit den zu analysierenden PDFs (echte Quellen)
+├── simple_sources/               # Ordner mit Test-PDFs
+│   ├── test_A.pdf                # Normalfall: enthält mehrere Keywords
+│   ├── test_B.pdf                # Normalfall: enthält wenige Keywords
+│   ├── test_C.pdf                # Randfall: enthält nur 1 Keyword mit Treffer
+│   ├── test_hyphenation.pdf      # Randfall: Keywords über Silbentrennung
+│   ├── chinese.pdf               # Fehlerfall: fremdsprachige PDF (kein Treffer erwartet)
+│   └── image_pdf.pdf             # Fehlerfall: bild-basierte PDF (Score = 0 erwartet)
 │
-├── result.csv                # Ausgabe: Ergebnistabelle als CSV
-├── result.xlsx               # Ausgabe: Ergebnistabelle als Excel
-└── erwartet.csv              # Erwartete Ergebnisse (für Tests)
+├── result.csv                    # Ausgabe: Ergebnistabelle als CSV
+├── result.xlsx                   # Ausgabe: Ergebnistabelle als Excel
+├── erwartet.csv                  # Erwartete Testergebnisse (für Normalfall-Vergleich)
+└── Abweichungsanalyse.docx       # Konzept der relativen Score-Bewertung
 ```
 
 ---
@@ -75,11 +78,26 @@ python quellenbewertung.py
 
 Das Skript gibt die Ergebnistabelle in der Konsole aus und exportiert `result.csv` sowie `result.xlsx`.
 
+Für den Test mit einfachen Testdaten den Ordner-Pfad im Skript auf `simple_sources/` und die Keyword-Datei auf `simple_stichpunkte.txt` umstellen.
+
+---
+
+## Flussdiagramm
+
+Das folgende Diagramm zeigt den vollständigen Ablauf des Algorithmus:
+
+![Flussdiagramm des Algorithmus](./algo_quellanalyse.drawio.png)
+
+**Erläuterung der wichtigsten Pfade:**
+- **Fehlerfall (Nein-Pfad bei „PDFs gefunden?"):** Das Programm bricht mit einer Fehlermeldung ab.
+- **Hauptschleife:** Für jede PDF werden alle Keywords durchlaufen, Treffer gespeichert und der Score berechnet.
+- **Abschluss:** Erst wenn alle PDFs und alle Keywords verarbeitet wurden, wird die Tabelle erstellt, sortiert und ausgegeben.
+
 ---
 
 ## Algorithmus – Detaillierte Erklärung
 
-Der Algorithmus besteht aus **5 Hauptschritten**. Nachfolgend wird jeder Schritt genau erklärt.
+Der Algorithmus besteht aus **5 Hauptschritten**.
 
 ---
 
@@ -87,7 +105,7 @@ Der Algorithmus besteht aus **5 Hauptschritten**. Nachfolgend wird jeder Schritt
 
 **Funktion:** `load_keywords(file_path: Path) → list[str]`
 
-Die Keyword-Datei (z. B. `stichpunkte.txt`) wird Zeile für Zeile eingelesen. Leere Zeilen werden ignoriert. Die Reihenfolge der Keywords in der Datei ist **entscheidend**, da sie direkt die Gewichtung bestimmt (siehe Schritt 1b).
+Die Keyword-Datei (z. B. `stichpunkte.txt`) wird Zeile für Zeile eingelesen. Leere Zeilen werden ignoriert. Die Reihenfolge der Keywords ist **entscheidend**, da sie direkt die Gewichtung bestimmt.
 
 **Beispiel `stichpunkte.txt`:**
 ```
@@ -107,10 +125,8 @@ Wenn die Datei nicht existiert oder leer ist, bricht das Programm mit einem Fehl
 
 **Funktion:** `calculate_weights(keywords: list[str]) → dict[str, int]`
 
-Nach dem Laden der Keywords wird für jedes Keyword ein **Gewicht** (englisch: *weight*) berechnet. Das Prinzip ist einfach:
-
 - Das **erste** Keyword (wichtigstes) bekommt das **höchste** Gewicht `n`
-- Das **letzte** Keyword (unwichtigstes) bekommt das **niedrigste** Gewicht `1`
+- Das **letzte** Keyword bekommt das **niedrigste** Gewicht `1`
 
 **Formel:**
 
@@ -118,7 +134,7 @@ Nach dem Laden der Keywords wird für jedes Keyword ein **Gewicht** (englisch: *
 Gewicht(keyword_i) = n - i
 ```
 
-Dabei ist `n` die Gesamtanzahl der Keywords und `i` der 0-basierte Index des Keywords.
+`n` = Gesamtanzahl der Keywords, `i` = 0-basierter Index.
 
 **Beispiel** (6 Keywords → n = 6):
 
@@ -131,15 +147,13 @@ Dabei ist `n` die Gesamtanzahl der Keywords und `i` der 0-basierte Index des Key
 | 4     | Python           | 2       |
 | 5     | schreibtisch     | 1       |
 
-Das Gewicht spiegelt direkt die **thematische Priorität** wider, die der Nutzer durch die Reihenfolge in der Keyword-Datei festlegt.
-
 ---
 
 ### Schritt 2: PDF-Ordner laden
 
 **Funktion:** `load_pdfs(folder_path: Path) → list[Path]`
 
-Das Skript liest alle Dateien mit der Endung `.pdf` aus dem konfigurierten Ordner (Standard: `sources/`). Die Liste wird alphabetisch sortiert (`sorted()`), damit die Verarbeitungsreihenfolge deterministisch ist. Wird der Ordner nicht gefunden oder enthält keine PDFs, bricht das Programm ab.
+Alle `.pdf`-Dateien aus dem konfigurierten Ordner werden alphabetisch sortiert geladen. Wird der Ordner nicht gefunden oder enthält keine PDFs, bricht das Programm ab.
 
 ---
 
@@ -147,36 +161,21 @@ Das Skript liest alle Dateien mit der Endung `.pdf` aus dem konfigurierten Ordne
 
 **Funktion:** `extract_text(pdf_path: Path) → str`
 
-Für jede PDF-Datei wird der enthaltene Text mit `pypdf.PdfReader` Seite für Seite extrahiert. Die Texte aller Seiten werden mit Zeilenumbrüchen verbunden.
-
-**Wichtig: Zwei Textkorrekturen werden angewendet:**
+Der Text wird mit `pypdf.PdfReader` Seite für Seite extrahiert. Zwei Korrekturen werden angewendet:
 
 #### Korrektur 1 – Silbentrennungs-Fix
-PDFs enthalten häufig automatische Silbentrennung am Zeilenende, z. B.:
-
+```python
+re.sub(r'-\n', '', raw_text)
 ```
-...the neu-
-ral network was trained...
-```
+Entfernt Bindestrich + Zeilenumbruch, sodass getrennte Wörter wieder zusammengefügt werden.
 
-Der reguläre Ausdruck `re.sub(r'-\n', '', raw_text)` entfernt den Bindestrich samt Zeilenumbruch und fügt das Wort wieder zusammen:
-
-```
-...the neural network was trained...
-```
-
-#### Korrektur 2 – Einfacher Zeilenumbruch → Leerzeichen
-Normale Zeilenumbrüche (kein Doppel-Newline, also kein Absatzende) werden durch Leerzeichen ersetzt:
-
-```
+#### Korrektur 2 – Zeilenumbruch → Leerzeichen
+```python
 re.sub(r'(?<!\n)\n(?!\n)', ' ', raw_text)
 ```
+Verhindert, dass Wörter über Zeilengrenzen als separate Tokens gezählt werden.
 
-Dadurch wird verhindert, dass Wörter, die über eine Zeilengrenze hinausgehen, als zwei separate Tokens gezählt werden.
-
-**Fehlerfall:** Falls die PDF nicht lesbar ist (z. B. beschädigte Datei), gibt die Funktion einen leeren String zurück. Der Score dieser Datei wird dann automatisch `0`.
-
-> **Einschränkung [L3]:** Bild-basierte PDFs (gescannte Dokumente ohne Text-Layer) liefern ebenfalls einen leeren String und erhalten einen Score von 0.
+**Fehlerfall:** Bei nicht lesbaren PDFs (z. B. Bild-PDFs) gibt die Funktion einen leeren String zurück → Score = 0.
 
 ---
 
@@ -184,38 +183,18 @@ Dadurch wird verhindert, dass Wörter, die über eine Zeilengrenze hinausgehen, 
 
 **Funktion:** `count_occurrences(keyword: str, text: str) → int`
 
-Diese Funktion zählt, wie oft ein Keyword im extrahierten Text vorkommt. Die Suche ist:
-
-- **Case-insensitive** (Groß-/Kleinschreibung wird ignoriert) → `text.lower()`
-- **Word-boundary-aware** (es werden nur vollständige Wörter/Phrasen gefunden, keine Teilstrings)
-
-Der reguläre Ausdruck lautet:
+- **Case-insensitive** → `text.lower()`
+- **Word-boundary-aware** → `\b`-Anker verhindern Teilstring-Treffer
 
 ```python
 pattern = r'\b' + re.escape(keyword.lower()) + r'\b'
 ```
 
-Die `\b`-Anker (Word Boundaries) stellen sicher, dass z. B. das Keyword `"learn"` **nicht** innerhalb von `"learning"` gefunden wird. `re.escape()` sorgt dafür, dass Sonderzeichen im Keyword (z. B. Punkte, Klammern) korrekt behandelt werden.
-
-**Funktioniert für:**
-- Einzelwörter: `"Python"` → findet `"python"`, `"Python"`, `"PYTHON"`
-- Mehrwort-Phrasen: `"neural network"` → findet `"neural network"` als zusammenhängende Phrase
-
-**Ergebnis:** Für jede PDF und jedes Keyword wird die Trefferanzahl in der Datenstruktur `hits[filename][keyword]` gespeichert.
+Ergebnis: `hits[filename][keyword]` speichert die Trefferanzahl je PDF und Keyword.
 
 ---
 
 ### Schritt 4: Score berechnen
-
-Nachdem alle Treffer gezählt wurden, wird für jede PDF-Datei ein **Gesamtscore** berechnet. Der Score ist die Summe aller gewichteten Keyword-Treffer.
-
-**Formel:**
-
-```
-Score(Quelle) = Σ (Trefferanzahl(keyword_i) × Gewicht(keyword_i))
-```
-
-In Python:
 
 ```python
 score = sum(
@@ -224,41 +203,71 @@ score = sum(
 )
 ```
 
-**Interpretation:** Eine PDF, die das wichtigste Keyword (höchstes Gewicht) häufig enthält, erhält einen deutlich höheren Score als eine PDF, die nur unwichtige Keywords enthält. Keyword-Häufigkeit und Keyword-Priorität werden so kombiniert.
+PDFs mit häufig vorkommenden, hochgewichteten Keywords erhalten einen höheren Score.
 
 ---
 
 ### Schritt 5: Tabelle bauen & sortieren
 
-Die Ergebnisse werden in einem `pandas.DataFrame` zusammengeführt. Jede Zeile entspricht einer PDF-Datei, jede Spalte einem Keyword plus einer abschließenden Score-Spalte.
-
-Die Tabelle wird **absteigend nach Score** sortiert:
+Ergebnisse werden in einem `pandas.DataFrame` zusammengeführt, **absteigend nach Score** sortiert. Der Index entspricht dem **Relevanz-Rang** (Rang 1 = relevanteste Quelle).
 
 ```python
 table = table.sort_values(by="Score", ascending=False)
-table = table.reset_index(drop=True)
-table.index += 1  # Rang beginnt bei 1
+table.index += 1
 ```
-
-Der Index entspricht damit dem **Relevanz-Rang**: Rang 1 = relevanteste Quelle.
 
 ---
 
 ## Score-Formel
 
-Die vollständige mathematische Formel für den Score einer Quelle `Q` mit `n` Keywords:
+Die vollständige mathematische Formel für den Score einer Quelle Q mit n Keywords:
 
-$$
-Score(Q) = \sum_{i=0}^{n-1} count(keyword_i, Q) \times (n - i)
-$$
+$$Score(Q) = \sum_{i=0}^{n-1} count(keyword_i, Q) \times (n - i)$$
 
 | Symbol | Bedeutung |
 |--------|-----------|
-| $Q$ | Die zu bewertende Quelle (PDF-Datei) |
-| $n$ | Gesamtanzahl der Keywords |
-| $i$ | 0-basierter Index des Keywords in der Keyword-Datei |
-| $count(keyword_i, Q)$ | Anzahl der exakten Treffer von $keyword_i$ in Quelle $Q$ |
-| $n - i$ | Gewicht des Keywords (höchstes Gewicht für $i = 0$) |
+| Q | Die zu bewertende Quelle (PDF-Datei) |
+| n | Gesamtanzahl der Keywords |
+| i | 0-basierter Index des Keywords |
+| count(keyword_i, Q) | Anzahl der exakten Treffer von keyword_i in Quelle Q |
+| n - i | Gewicht des Keywords |
+
+---
+
+## Abweichungsanalyse
+
+### Wann ist eine Quelle gut?
+
+Ein Score von z. B. **42** sagt alleine nichts aus. Bei 3 Keywords ist 42 hervorragend, bei 20 Keywords ist 42 schwach. Deshalb wird ein **relativer Vergleichswert** benötigt.
+
+### Schritt 1: Maximalen Score berechnen
+
+Stellt man sich vor, jedes Keyword kommt in der Quelle **genau einmal** vor (das absolute Minimum für Relevanz), ist der **theoretische Maximal-Score**:
+
+$$Score_{max} = \frac{n \times (n + 1)}{2}$$
+
+**Beispiel** mit 6 Keywords:
+
+$$Score_{max} = \frac{6 \times 7}{2} = 21$$
+
+### Schritt 2: Relativen Score berechnen
+
+$$Score_{rel}(Q) = \frac{Score(Q)}{Score_{max}} \times 100$$
+
+Ein relativer Score von **100%** bedeutet, dass jedes Keyword genau einmal vorkommt. Alles darüber zeigt, dass Keywords mehrfach vorkommen – die Quelle ist **überdurchschnittlich relevant**.
+
+### Schritt 3: Klassifikation
+
+| Stufe | Relativer Score | Interpretation |
+|-------|-----------------|----------------|
+| 🟢 **Sehr gut** | > 100% | Keywords kommen sehr häufig vor – Kernquelle |
+| 🟡 **Gut** | 50 – 100% | Klar relevant, deckt das Thema gut ab |
+| 🟠 **Ausreichend** | 20 – 50% | Randthema, nur bedingt nutzbar |
+| 🔴 **Schwach** | < 20% | Kaum relevant, besser weglassen |
+
+### Warum ist das fair?
+
+Ohne Normalisierung würde ein **1000-seitiges Buch** immer gewinnen, weil jedes Keyword dort häufiger vorkommt als in einem 5-seitigen Paper. Der relative Score macht die Quellen **unabhängig von ihrer Länge und der Keyword-Anzahl** vergleichbar.
 
 ---
 
@@ -288,6 +297,145 @@ schreibtisch        → Gewicht 1
 
 ---
 
+## Testdokumentation
+
+### Verwendete Test-Konfiguration
+
+- **Keyword-Datei:** `simple_stichpunkte.txt`
+- **Keyword-Reihenfolge und Gewichte:**
+
+| Index | Keyword        | Gewicht |
+|-------|----------------|---------|
+| 0     | neural network | 4       |
+| 1     | DEEP LEARNINg  | 3       |
+| 2     | deep learning  | 2       |
+| 3     | Python         | 1       |
+
+> **Hinweis zu den Keywords:** `DEEP LEARNINg` und `deep learning` sind bewusst doppelt eingetragen (unterschiedliche Schreibweise), um das case-insensitive Verhalten zu testen. Beide werden intern zu `deep learning` normalisiert und zählen separat.
+
+- **Test-PDFs:** `simple_sources/`
+- **Erwartete Ergebnisse:** `erwartet.csv`
+
+---
+
+### Testkategorie 1 – Normalfall
+
+**Ziel:** Prüfen ob der Algorithmus bekannte Keyword-Treffer korrekt zählt und den Score richtig berechnet.
+
+#### Testfall N1 – Mehrere Keywords vorhanden (`test_A.pdf`)
+
+| Feld | Wert |
+|------|------|
+| Input | `test_A.pdf` + `simple_stichpunkte.txt` |
+| Erwartete Treffer | neural network: 4, DEEP LEARNINg: 1, deep learning: 1, Python: 1 |
+| Erwarteter Score | 22 |
+| Tatsächliche Treffer | _(hier eintragen)_ |
+| Tatsächlicher Score | _(hier eintragen)_ |
+| Ergebnis | ⬜ Bestanden / ⬜ Fehlgeschlagen |
+| Abweichung | _(hier eintragen oder „keine")_ |
+
+#### Testfall N2 – Wenige Keywords vorhanden (`test_B.pdf`)
+
+| Feld | Wert |
+|------|------|
+| Input | `test_B.pdf` + `simple_stichpunkte.txt` |
+| Erwartete Treffer | neural network: 0, DEEP LEARNINg: 3, deep learning: 3, Python: 2 |
+| Erwarteter Score | 17 |
+| Tatsächliche Treffer | _(hier eintragen)_ |
+| Tatsächlicher Score | _(hier eintragen)_ |
+| Ergebnis | ⬜ Bestanden / ⬜ Fehlgeschlagen |
+| Abweichung | _(hier eintragen oder „keine")_ |
+
+---
+
+### Testkategorie 2 – Randfall
+
+**Ziel:** Prüfen wie der Algorithmus mit Grenzfällen umgeht (Silbentrennung, fast keine Treffer).
+
+#### Testfall R1 – Silbentrennung (`test_hyphenation.pdf`)
+
+Testet ob der Silbentrennungs-Fix korrekt funktioniert. Wörter wie `neu-\nral network` sollen als `neural network` erkannt werden.
+
+| Feld | Wert |
+|------|------|
+| Input | `test_hyphenation.pdf` + `simple_stichpunkte.txt` |
+| Erwartete Treffer | neural network: 2, DEEP LEARNINg: 2, deep learning: 2, Python: 1 |
+| Erwarteter Score | 19 |
+| Tatsächliche Treffer | _(hier eintragen)_ |
+| Tatsächlicher Score | _(hier eintragen)_ |
+| Ergebnis | ⬜ Bestanden / ⬜ Fehlgeschlagen |
+| Abweichung | _(hier eintragen oder „keine")_ |
+
+#### Testfall R2 – Nur 1 Keyword trifft (`test_C.pdf`)
+
+| Feld | Wert |
+|------|------|
+| Input | `test_C.pdf` + `simple_stichpunkte.txt` |
+| Erwartete Treffer | neural network: 0, DEEP LEARNINg: 0, deep learning: 0, Python: 1 |
+| Erwarteter Score | 1 |
+| Tatsächliche Treffer | _(hier eintragen)_ |
+| Tatsächlicher Score | _(hier eintragen)_ |
+| Ergebnis | ⬜ Bestanden / ⬜ Fehlgeschlagen |
+| Abweichung | _(hier eintragen oder „keine")_ |
+
+---
+
+### Testkategorie 3 – Fehlerfall
+
+**Ziel:** Prüfen ob das Programm bei problematischen Eingaben robust reagiert (kein Absturz, Score = 0).
+
+#### Testfall F1 – Bild-basierte PDF (`image_pdf.pdf`)
+
+Bild-PDFs enthalten keinen Text-Layer → `extract_text()` gibt leeren String zurück → Score muss 0 sein.
+
+| Feld | Wert |
+|------|------|
+| Input | `simple_sources/image_pdf.pdf` + `simple_stichpunkte.txt` |
+| Erwartetes Verhalten | Kein Absturz, Score = 0 |
+| Tatsächliches Verhalten | _(hier eintragen)_ |
+| Tatsächlicher Score | _(hier eintragen)_ |
+| Ergebnis | ⬜ Bestanden / ⬜ Fehlgeschlagen |
+| Abweichung | _(hier eintragen oder „keine")_ |
+
+#### Testfall F2 – Fremdsprachige PDF (`chinese.pdf`)
+
+Eine PDF auf Chinesisch enthält keine englischen Keywords → alle Treffer = 0, Score = 0.
+
+| Feld | Wert |
+|------|------|
+| Input | `simple_sources/chinese.pdf` + `simple_stichpunkte.txt` |
+| Erwartetes Verhalten | Kein Absturz, alle Treffer = 0, Score = 0 |
+| Tatsächliches Verhalten | _(hier eintragen)_ |
+| Tatsächlicher Score | _(hier eintragen)_ |
+| Ergebnis | ⬜ Bestanden / ⬜ Fehlgeschlagen |
+| Abweichung | _(hier eintragen oder „keine")_ |
+
+#### Testfall F3 – Leerer PDF-Ordner
+
+| Feld | Wert |
+|------|------|
+| Input | Leerer Ordner (keine PDFs vorhanden) |
+| Erwartetes Verhalten | Fehlermeldung: „FEHLER: Kein PDF gefunden", Programm bricht ab |
+| Tatsächliches Verhalten | _(hier eintragen)_ |
+| Ergebnis | ⬜ Bestanden / ⬜ Fehlgeschlagen |
+| Abweichung | _(hier eintragen oder „keine")_ |
+
+---
+
+### Gesamtergebnis Testdurchlauf
+
+| Testfall | Kategorie | Ergebnis |
+|----------|-----------|----------|
+| N1 – test_A.pdf | Normalfall | ⬜ |
+| N2 – test_B.pdf | Normalfall | ⬜ |
+| R1 – test_hyphenation.pdf | Randfall | ⬜ |
+| R2 – test_C.pdf | Randfall | ⬜ |
+| F1 – image_pdf.pdf | Fehlerfall | ⬜ |
+| F2 – chinese.pdf | Fehlerfall | ⬜ |
+| F3 – Leerer Ordner | Fehlerfall | ⬜ |
+
+---
+
 ## Annahmen & Einschränkungen
 
 | ID  | Typ           | Beschreibung                                                             |
@@ -310,17 +458,20 @@ Das Skript erzeugt drei Ausgaben:
 2. **`result.csv`** – Ergebnistabelle als CSV-Datei (UTF-8)
 3. **`result.xlsx`** – Ergebnistabelle als Excel-Datei (Sheet: `Results`)
 
-**Beispiel-Konsolenausgabe:**
+**Beispiel-Konsolenausgabe (aus echten Quellen in `sources/`):**
 
 ```
-╭──────┬────────────────────┬────────────────┬───────────────┬───────┬────────┬──────────────┬───────╮
-│      │ Source             │ neural network │ deep learning │  ...  │ Python │ schreibtisch │ Score │
-├──────┼────────────────────┼────────────────┼───────────────┼───────┼────────┼──────────────┼───────┤
-│    1 │ paper_A.pdf        │             12 │             8 │  ...  │      1 │            0 │   143 │
-│    2 │ paper_B.pdf        │              3 │             2 │  ...  │      0 │            0 │    28 │
-╰──────┴────────────────────┴────────────────┴───────────────┴───────┴────────┴──────────────┴───────╯
+╭───┬────────────────────┬────────────────┬───────────────┬──────────────────┬───────────────┬────────┬──────────────┬───────╮
+│   │ Source             │ neural network │ deep learning │ machine learning │ training data │ Python │ schreibtisch │ Score │
+├───┼────────────────────┼────────────────┼───────────────┼──────────────────┼───────────────┼────────┼──────────────┼───────┤
+│ 1 │ 1912.09789v1.pdf   │             23 │            26 │              159 │            20 │      3 │            0 │   970 │
+│ 2 │ 1908.00080v4.pdf   │             31 │            75 │               68 │             7 │      7 │            0 │   868 │
+│ 3 │ 2108.00941v3.pdf   │             10 │            33 │               43 │             4 │      0 │            0 │   409 │
+│ 4 │ 2308.11254v1.pdf   │              0 │            10 │               60 │             2 │      1 │            0 │   298 │
+│ 5 │ 2402.06196v3.pdf   │              5 │             9 │               16 │             8 │      8 │            0 │   179 │
+╰───┴────────────────────┴────────────────┴───────────────┴──────────────────┴───────────────┴────────┴──────────────┴───────╯
 ```
 
 ---
 
-*Entwickelt für den FOM Hackathon – Algorithms & Data Structures 2026*
+*Entwickelt für den FOM Hackathon – Algorithmen & Datenstrukturen 2026*
