@@ -61,7 +61,7 @@ source_analyzer/
 │
 ├── result.csv                    # Ausgabe: Ergebnistabelle als CSV
 ├── result.xlsx                   # Ausgabe: Ergebnistabelle als Excel
-├── erwartet.csv                  # Erwartete Testergebnisse (für Normalfall-Vergleich)
+├── erwartet.csv                  # Erwartete Testergebnisse (für simple_sources)
 ├── source_analyzer.drawio.jpg    # Flussdiagramm (vollständig, inkl. Fehlerpfade)
 └── Abweichungsanalyse.docx       # Konzept der relativen Score-Bewertung
 ```
