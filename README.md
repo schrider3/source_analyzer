@@ -61,6 +61,7 @@ source_analyzer/
 ├── result.csv                    # Ausgabe: Ergebnistabelle als CSV
 ├── result.xlsx                   # Ausgabe: Ergebnistabelle als Excel
 ├── erwartet.csv                  # Erwartete Testergebnisse (für Normalfall-Vergleich)
+├── source_analyzer.drawio.jpg    # Flussdiagramm (vollständig, inkl. Fehlerpfade)
 └── Abweichungsanalyse.docx       # Konzept der relativen Score-Bewertung
 ```
 
@@ -84,12 +85,15 @@ Für den Test mit einfachen Testdaten den Ordner-Pfad im Skript auf `simple_sour
 
 ## Flussdiagramm
 
-Das folgende Diagramm zeigt den vollständigen Ablauf des Algorithmus:
+Das folgende Diagramm zeigt den vollständigen Ablauf des Algorithmus inkl. aller Fehler- und Sonderpfade:
 
-![Flussdiagramm des Algorithmus](./algo_quellanalyse.drawio.png)
+![Flussdiagramm des Algorithmus](./source_analyzer.drawio.jpg)
 
 **Erläuterung der wichtigsten Pfade:**
-- **Fehlerfall (Nein-Pfad bei „PDFs gefunden?"):** Das Programm bricht mit einer Fehlermeldung ab.
+- **Fehlerfall 1 – Stichpunkt-Datei fehlt/leer:** Programm bricht sofort ab.
+- **Fehlerfall 2 – Ordner nicht gefunden:** Programm bricht ab bevor nach PDFs gesucht wird.
+- **Fehlerfall 3 – Keine PDFs im Ordner:** Programm bricht mit Fehlermeldung ab.
+- **Sonderfall – PDF nicht lesbar:** Warnung wird ausgegeben, Score = 0, Programm läuft weiter zur nächsten PDF.
 - **Hauptschleife:** Für jede PDF werden alle Keywords durchlaufen, Treffer gespeichert und der Score berechnet.
 - **Abschluss:** Erst wenn alle PDFs und alle Keywords verarbeitet wurden, wird die Tabelle erstellt, sortiert und ausgegeben.
 
