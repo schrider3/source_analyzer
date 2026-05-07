@@ -88,7 +88,7 @@ Für den Test mit einfachen Testdaten den Ordner-Pfad im Skript auf `simple_sour
 
 Das folgende Diagramm zeigt den vollständigen Ablauf des Algorithmus inkl. aller Fehler- und Sonderpfade:
 
-![Flussdiagramm des Algorithmus](./source_analyzer.drawio.jpg)
+![Flussdiagramm des Algorithmus](./source_analyzer.drawio.png)
 
 **Erläuterung der wichtigsten Pfade:**
 - **Fehlerfall 1 – Stichpunkt-Datei fehlt/leer:** Programm bricht sofort ab.
