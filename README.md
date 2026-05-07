@@ -18,6 +18,7 @@ Dieses Tool bewertet automatisch die Relevanz von PDF-Quellen anhand einer gewic
 - [Beispiel](#beispiel)
 - [Testdokumentation](#testdokumentation)
 - [Annahmen & Einschränkungen](#annahmen--einschränkungen)
+- [Reflexion](#reflexion)
 - [Ausgabe](#ausgabe)
 
 ---
@@ -454,6 +455,33 @@ Eine PDF auf Chinesisch enthält keine englischen Keywords → alle Treffer = 0,
 | L5  | Einschränkung | Häufigkeit ≠ Relevanz – der Kontext der Erwähnung wird nicht bewertet                                                                                          |
 | L6  | Einschränkung | Mehrspaltige PDFs: `pypdf` extrahiert Text zeilenweise ohne Spaltenlogik – bei zweispaltigen Layouts können Wörter aus verschiedenen Spalten vermischt werden, was zu fehlerhaften Treffern oder verpassten Keywords führen kann |
 | L7  | Einschränkung | Kopf- und Fußzeilen werden nicht herausgefiltert – Keywords die dort vorkommen (z. B. Titel, Seitenzahlen, Zeitschriftenname) werden mitgezählt und erhöhen den Score künstlich |
+
+---
+
+## Reflexion
+
+### Wo ist der Algorithmus ineffizient?
+
+Der Algorithmus verarbeitet jede PDF vollständig sequenziell: Für jede PDF wird der gesamte Text extrahiert und anschließend für jedes einzelne Keyword ein separater Regex-Suchlauf durchgeführt. Das bedeutet bei **P** PDFs und **K** Keywords werden **P × K** Regex-Operationen ausgeführt – jede davon durchläuft den gesamten Text der jeweiligen PDF.
+
+Konkret ineffizient ist das in zwei Punkten:
+
+- **Kein Caching des extrahierten Texts:** Wird das Skript mehrfach mit unterschiedlichen Keyword-Dateien auf denselben PDFs ausgeführt, wird der PDF-Text jedes Mal neu extrahiert, obwohl er sich nicht geändert hat. Eine einmalige Vorverarbeitung (Preprocessing) mit gespeichertem Text würde die Laufzeit bei Wiederholungen drastisch senken.
+- **Einzelne Regex-Läufe pro Keyword:** Alle Keywords werden nacheinander als separate Regex-Muster auf denselben Text angewendet. Effizienter wäre ein einziger kombinierter Regex-Lauf mit einem `|`-verknüpften Muster, der den Text nur einmal durchläuft und alle Keywords gleichzeitig zählt.
+
+### Wie skaliert die Lösung?
+
+Der Algorithmus skaliert **linear** mit der Anzahl der PDFs und der Anzahl der Keywords. Verdoppelt man die Anzahl der PDFs, verdoppelt sich die Laufzeit – verdoppelt man gleichzeitig auch die Keywords, vervierfacht sie sich. Das ist für den studentischen Anwendungsfall (10–50 PDFs, 5–20 Keywords) problemlos handhabbar und läuft in Sekunden.
+
+Bei größeren Datenmengen entstehen jedoch zwei Engpässe:
+
+| Szenario | Problem |
+|---|---|
+| Sehr viele PDFs (z. B. 500+) | Text-Extraktion ist der Flaschenhals – `pypdf` liest sequenziell, keine Parallelverarbeitung |
+| Sehr große PDFs (z. B. 500+ Seiten) | Der gesamte Text wird in den Arbeitsspeicher geladen – bei sehr großen Dokumenten kann das zu Speicherproblemen führen |
+| Sehr viele Keywords (z. B. 100+) | Für jedes Keyword ein separater Regex-Lauf – Laufzeit steigt linear |
+
+Für eine produktionsreife Version wären folgende Maßnahmen sinnvoll: parallele PDF-Verarbeitung mit `multiprocessing`, ein gecachter Text-Index nach der ersten Extraktion sowie ein kombinierter Regex-Ausdruck für alle Keywords.
 
 ---
 
