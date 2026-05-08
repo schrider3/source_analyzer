@@ -239,7 +239,7 @@ $$Score(Q) = \sum_{i=0}^{n-1} count(keyword_i, Q) \times (n - i)$$
 
 ---
 
-## Abweichungsanalyse
+## Abweichungsanalyse (depreciated)
 
 ### Wann ist eine Quelle gut?
 
