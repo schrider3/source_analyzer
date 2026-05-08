@@ -239,36 +239,22 @@ $$Score(Q) = \sum_{i=0}^{n-1} count(keyword_i, Q) \times (n - i)$$
 
 ---
 
-## Abweichungsanalyse (depreciated)
+## Abweichungsanalyse
 
 ### Wann ist eine Quelle gut?
 
 Ein Score von z. B. **42** sagt alleine nichts aus. Bei 3 Keywords ist 42 hervorragend, bei 20 Keywords ist 42 schwach. Deshalb wird ein **relativer Vergleichswert** benötigt.
 
-### Schritt 1: Maximalen Score berechnen
+$$Score(Q) = \frac{\sum_{i=0}^{n-1} count(keyword_i, Q) \times (n - i)}{wordcount(Q)}$$
 
-Stellt man sich vor, jedes Keyword kommt in der Quelle **genau einmal** vor (das absolute Minimum für Relevanz), ist der **theoretische Maximal-Score**:
-
-$$Score_{max} = \frac{n \times (n + 1)}{2}$$
-
-**Beispiel** mit 6 Keywords:
-
-$$Score_{max} = \frac{6 \times 7}{2} = 21$$
-
-### Schritt 2: Relativen Score berechnen
-
-$$Score_{rel}(Q) = \frac{Score(Q)}{Score_{max}} \times 100$$
-
-Ein relativer Score von **100%** bedeutet, dass jedes Keyword genau einmal vorkommt. Alles darüber zeigt, dass Keywords mehrfach vorkommen – die Quelle ist **überdurchschnittlich relevant**.
-
-### Schritt 3: Klassifikation
-
-| Stufe | Relativer Score | Interpretation |
-|-------|-----------------|----------------|
-| 🟢 **Sehr gut** | > 100% | Keywords kommen sehr häufig vor – Kernquelle |
-| 🟡 **Gut** | 50 – 100% | Klar relevant, deckt das Thema gut ab |
-| 🟠 **Ausreichend** | 20 – 50% | Randthema, nur bedingt nutzbar |
-| 🔴 **Schwach** | < 20% | Kaum relevant, besser weglassen |
+| Symbol | Bedeutung |
+|--------|-----------|
+| Q | Die zu bewertende Quelle (PDF-Datei) |
+| n | Gesamtanzahl der Keywords |
+| i | 0-basierter Index des Keywords |
+| $count(keyword_i, Q)$ | Anzahl der exakten Treffer von $keyword_i$ in Quelle Q |
+| $n - i$ | Gewicht des Keywords |
+| $wordcount(Q)$ | Gesamtanzahl der Wörter in Quelle Q |
 
 ### Warum ist das fair?
 
@@ -336,7 +322,7 @@ schreibtisch        → Gewicht 1
 | Erwarteter Score | 22 |
 | Tatsächliche Treffer | neural network: 4, DEEP LEARNINg: 1, deep learning: 1, Python: 1 |
 | Tatsächlicher Score | 22 |
-| Ergebnis | ⬜ Bestanden |
+| Ergebnis | ✅ Bestanden |
 | Abweichung | keine |
 
 #### Testfall N2 – Wenige Keywords vorhanden (`test_B.pdf`)
@@ -348,7 +334,7 @@ schreibtisch        → Gewicht 1
 | Erwarteter Score | 17 |
 | Tatsächliche Treffer | neural network: 0, DEEP LEARNINg: 3, deep learning: 3, Python: 2 |
 | Tatsächlicher Score | 17 |
-| Ergebnis | ✅Bestanden |
+| Ergebnis | ✅ Bestanden |
 | Abweichung | keine |
 
 ---
@@ -368,7 +354,7 @@ Testet ob der Silbentrennungs-Fix korrekt funktioniert. Wörter wie `neu-\nral n
 | Erwarteter Score | 19 |
 | Tatsächliche Treffer | neural network: 2, DEEP LEARNINg: 2, deep learning: 2, Python: 1 |
 | Tatsächlicher Score | 19 |
-| Ergebnis | ✅Bestanden |
+| Ergebnis | ✅ Bestanden |
 | Abweichung | keine |
 
 #### Testfall R2 – Nur 1 Keyword trifft (`test_C.pdf`)
@@ -380,7 +366,7 @@ Testet ob der Silbentrennungs-Fix korrekt funktioniert. Wörter wie `neu-\nral n
 | Erwarteter Score | 1 |
 | Tatsächliche Treffer | neural network: 0, DEEP LEARNINg: 0, deep learning: 0, Python: 1 |
 | Tatsächlicher Score | 1 |
-| Ergebnis | ✅Bestanden |
+| Ergebnis | ✅ Bestanden |
 | Abweichung | keine |
 
 ---
